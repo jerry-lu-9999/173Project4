@@ -16,23 +16,10 @@ struct Tuple {
     Tuple next;
 };
 
-// typedef struct SNAP *SNAPLIST;
-// struct SNAP {
-//     int StudentID;
-//     char Name[30];
-//     char Phone[8];
-//     SNAPLIST next;
-// };
-// typedef SNAPLIST SNAPTABLE[1009];
-
-// void insert_SNAP(SNAPLIST snap, SNAPTABLE relation){
-
-// }
 
 // constructor for relation
 Relation new_Relation(int size) {
     Relation this = (Relation)malloc(sizeof(struct Relation));
-    printf("new relations");
     this->size = size;
     this->schema = new_LinkedList();
     for(int i = 0; i < 1009; i++){
@@ -42,12 +29,10 @@ Relation new_Relation(int size) {
 }
 
 Relation create_CSG(){
-  printf("beginning of csg");
     Relation csg = new_Relation(3);
     LinkedList_add_at_front(csg->schema, "Grade");
     LinkedList_add_at_front(csg->schema, "StudentID");
     LinkedList_add_at_front(csg->schema, "Course");
-    printf("create_CSG works");
     return csg;
 }
 
@@ -83,29 +68,25 @@ Relation create_CR(){
 }
 
 // create tuple
-Tuple create_Tuple(char* strs) {
+Tuple create_Tuple(char* strs[]) {
     Tuple tuple = (Tuple)malloc(sizeof(struct Tuple));
+    
     if(tuple == NULL) {
         return NULL;
     }
-    char *ptr = strtok(strs,","); //https://www.codingame.com/playgrounds/14213/how-to-play-with-strings-in-c/string-split
-    int size = strlen(strs);
-  //  printf("%d",size);
-  //  printf("debugging\n");
-    int count = 0;
-    // for (int m  = 0; m < strlen(strs); m++){
-    //     if (strs[m] == ","){
-    //         count++;
-    //     }
-    // }
-    for (int i = 0; i < size; i++){ 
-        if(ptr != NULL){
-        tuple->str[i] = ptr;
-      //  printf("'%s'\n",ptr);
-        ptr = strtok(NULL, ",");
-	}
+    //int size = *(&strs + 1) - strs;
+    //printf("\nseizeof %d", sizeof(*strs)/sizeof(*strs[0]));
+    //printf("\nsize %d",size);
+   int i = 0;
+    for(char* s = *strs; s != "\0"; *s++){
+    //for (int i = 0; i < 3; i++){ //SIZE MUST BE FIXED
+        //tuple->str[i] = strs[i];
+	i++;
+	s = strs[i];
+ //     printf("'%s'\n",tuple->str[i]);
     }
-	// printf("%s", tuple->str[0]);
+
+//	printf("\n\nTHis is tuple at 0: %s \n1: %s \n, 2: %s \n", tuple->str[0], tuple->str[1], tuple->str[2]);
     return tuple;   
 }
 
@@ -122,8 +103,6 @@ int hash(char* str){
 
 // CHECK IF TWO TUPLES ARE EQUAL
 bool equalTuples(Tuple t1, Tuple t2){
-  printf("equalTuples");
-//  printf("%s \n %s", t1->str[0], t2->str[0]);
  int size1 = 0; int size2 = 0;
  for (int i = 0; i < 5; i++){
      if (t1->str[i]!=NULL){
@@ -135,42 +114,39 @@ bool equalTuples(Tuple t1, Tuple t2){
  }
   bool test = false;
     for (int j = 0; j < size1; j++){
-       printf("\nIN FOR LOOP %d %s", j, t1->str[j]);
             
       if (strcmp(t1->str[j],t2->str[j]) == 0){
-        printf("\nIF TRUUUEUEUUEUEUEUEU");
         	test = true;
       } else {
           test = false;
           break;
       }
     }
-    printf("\nEND OF TEST");
-    printf("\n%d", test);
     return test; 
 }
 
 
 // insert 
 void insert(Tuple t, Relation r) {
-  int key = hash(t->str[0]);
-    if(r->array[key] != NULL){
-        printf("\n\ninsert if loop");
+    int key = hash(t->str[0]);
+    if(LinkedList_elementAt(r->array[key], 0) != NULL){
+       // printf("\n\ninsert if loop");
         LinkedListIterator it = LinkedList_iterator(r->array[key]);
-        printf("%d\n\n", key);
+       // printf("%d\n\n", key);
         // LinkedList_print_string_list(r->array[key]);
         while(LinkedListIterator_hasNext(it)){
             Tuple tup = LinkedListIterator_next(it);
             if(equalTuples(tup, t)){
-                printf("\nTuple already exists");
+            //    printf("\nTuple already exists");
             } else {
                 tup -> next = t;
+
             }
         }
     } else {
-        printf("\n\n....else \n\n");
+       // printf("\n\n....else \n\n");
         LinkedList_add_at_front(r->array[key], t);
-         LinkedList_print_string_list(r->array[key]);
+        //LinkedList_print_string_list(r->array[key]);
 
     }
 }
@@ -191,7 +167,7 @@ bool check_Tuple(Tuple t, char** pattern){
     return check;
 }
 
-// lookpu
+// lookup
 Relation lookup(char** strs, Relation r) {
     Relation rela = new_Relation(0);
     // check for the first element in string array
@@ -209,36 +185,59 @@ Relation lookup(char** strs, Relation r) {
     } else {
         int key = hash(strs[0]);
         if(r->array[key] != NULL){
-        LinkedListIterator it = LinkedList_iterator(r->array[key]);
-        while(LinkedListIterator_hasNext(it)){
-            Tuple tup = LinkedListIterator_next(it);
-            if(check_Tuple(tup, strs)) {
-                insert(tup, rela);
+            LinkedListIterator it = LinkedList_iterator(r->array[key]);
+            while(LinkedListIterator_hasNext(it)){
+                Tuple tup = LinkedListIterator_next(it);
+                if(check_Tuple(tup, strs)) {
+                    insert(tup, rela);
+                }
             }
         }
     }
-    }
     return rela;
 }
-
 // print relation
 
 void print_Relation(Relation r){
+	printf("PRINT RELATIONS");
     for(int i = 0; i < sizeof(r->array); i++){
         LinkedListIterator it = LinkedList_iterator(r->array[i]);
         while(LinkedListIterator_hasNext(it)){
             Tuple tup = LinkedListIterator_next(it);
+		printf("SIZEOF %d", sizeof(tup->str));
             for(int j = 0; j < sizeof(tup->str); j++){
-                printf("\n%s ", tup->str[j]);
+                printf("\n J: %d \n STRING: %s ", j, tup->str[j]);
             }
         }
     }
 }
+
 // delete
 void delete(char** strs, Relation r) {
-
+    if(strcmp(strs[0], "*")){
+        for(int i = 0; i < r->size; i++){
+            LinkedList llist = r->array[i];
+            LinkedListIterator it = LinkedList_iterator(llist);
+            while(LinkedListIterator_hasNext(it)){
+                Tuple tup = LinkedListIterator_next(it);
+                if(check_Tuple(tup, strs)) {
+                    tup = tup->next;
+                }
+            }
+        }
+    } else {
+        int key = hash(strs[0]);
+        if(r->array[key] != NULL){
+            LinkedListIterator it = LinkedList_iterator(r->array[key]);
+            while(LinkedListIterator_hasNext(it)){
+                Tuple tup = LinkedListIterator_next(it);
+                if(check_Tuple(tup, strs)) {
+                    tup = tup->next;
+                }
+            }
+        }
+    }
 }
-
 // selection
 //Relation selection(char** strs, Relation r){
 
@@ -252,8 +251,11 @@ void delete(char** strs, Relation r) {
 // join
 int main(){
   Relation csg = create_CSG();
-  Tuple t1 = create_Tuple("CS101,12345,A");
-  Tuple t2 = create_Tuple("CS101,12345,B");
+  char* sa1 [3] = {"CS101","12345","A"};
+  char* sa2 [3] = {"CS101","12345","B"};
+  printf("--->%d", sizeof(sa1)/sizeof(sa1[0]));
+  Tuple t1 = create_Tuple(sa1);
+  Tuple t2 = create_Tuple(sa2);
   insert(t1,csg);
   insert(t2,csg);
   equalTuples(t1, t2);
