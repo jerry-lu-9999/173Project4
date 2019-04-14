@@ -111,8 +111,12 @@ Tuple create_Tuple(char* strs) {
 
 // NEED A HASH FUNCTION FOR STRING
 int hash(char* str){
-    
   int key=0;
+  for(int i = 0; i < strlen(str); i++)
+  {
+    key += str[i];
+  }
+  
   return key % 1009;
 }
 
@@ -120,9 +124,18 @@ int hash(char* str){
 bool equalTuples(Tuple t1, Tuple t2){
   printf("equalTuples");
 //  printf("%s \n %s", t1->str[0], t2->str[0]);
+ int size1 = 0; int size2 = 0;
+ for (int i = 0; i < 5; i++){
+     if (t1->str[i]!=NULL){
+         size1++;
+     }
+     if (t1->str[i] != NULL){
+         size2++;
+     }
+ }
   bool test = false;
-    for (int j = 0; j < strlen(t1->str); j++){
-        printf("\nIN FOR LOOP %d %s", j, t1->str[j]);
+    for (int j = 0; j < size1; j++){
+       printf("\nIN FOR LOOP %d %s", j, t1->str[j]);
             
       if (strcmp(t1->str[j],t2->str[j]) == 0){
         printf("\nIF TRUUUEUEUUEUEUEUEU");
@@ -142,17 +155,23 @@ bool equalTuples(Tuple t1, Tuple t2){
 void insert(Tuple t, Relation r) {
   int key = hash(t->str[0]);
     if(r->array[key] != NULL){
+        printf("\n\ninsert if loop");
         LinkedListIterator it = LinkedList_iterator(r->array[key]);
+        printf("%d\n\n", key);
+        // LinkedList_print_string_list(r->array[key]);
         while(LinkedListIterator_hasNext(it)){
             Tuple tup = LinkedListIterator_next(it);
             if(equalTuples(tup, t)){
-                printf("Tuple already exists");
+                printf("\nTuple already exists");
             } else {
                 tup -> next = t;
             }
         }
     } else {
+        printf("\n\n....else \n\n");
         LinkedList_add_at_front(r->array[key], t);
+         LinkedList_print_string_list(r->array[key]);
+
     }
 }
 
@@ -202,6 +221,19 @@ Relation lookup(char** strs, Relation r) {
     return rela;
 }
 
+// print relation
+
+void print_Relation(Relation r){
+    for(int i = 0; i < sizeof(r->array); i++){
+        LinkedListIterator it = LinkedList_iterator(r->array[i]);
+        while(LinkedListIterator_hasNext(it)){
+            Tuple tup = LinkedListIterator_next(it);
+            for(int j = 0; j < sizeof(tup->str); j++){
+                printf("\n%s ", tup->str[j]);
+            }
+        }
+    }
+}
 // delete
 void delete(char** strs, Relation r) {
 
@@ -222,8 +254,8 @@ int main(){
   Relation csg = create_CSG();
   Tuple t1 = create_Tuple("CS101,12345,A");
   Tuple t2 = create_Tuple("CS101,12345,B");
-//  printf("%s \n %s", t1->str[1], t2->str[1]);
-  // insert(t1,csg);
-  // insert(t2,csg);
+  insert(t1,csg);
+  insert(t2,csg);
   equalTuples(t1, t2);
+  print_Relation(csg);
 }
