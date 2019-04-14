@@ -32,7 +32,7 @@ struct Tuple {
 // constructor for relation
 Relation new_Relation(int size) {
     Relation this = (Relation)malloc(sizeof(struct Relation));
-
+    printf("new relations");
     this->size = size;
     this->schema = new_LinkedList();
     for(int i = 0; i < 1009; i++){
@@ -91,30 +91,32 @@ Tuple create_Tuple(char* strs) {
     char *ptr = strtok(strs,","); //https://www.codingame.com/playgrounds/14213/how-to-play-with-strings-in-c/string-split
     int size = strlen(strs);
     
-    printf("debugging");
+    printf("debugging\n");
     for (int i = 0; i < size; i++){ 
-    while(ptr != NULL){
-      tuple->str[i] = ptr;
-      ptr = strtok(NULL, ",");
-    }			   
-    return tuple;
-}
+        while(ptr != NULL){
+        tuple->str[i] = ptr;
+        ptr = strtok(NULL, ",");
+	}
+    }
+	
+    return tuple;   
 }
 
 // NEED A HASH FUNCTION FOR STRING
 int hash(char* str){
     
-    int key;
-    return key % 1009;
+  int key=0;
+  return key % 1009;
 }
 
 // CHECK IF TWO TUPLES ARE EQUAL
 bool equalTuples(Tuple t1, Tuple t2){
+  printf("equalTuples");
   bool test = false;
     for (int j = 0; j < 10; j++){
       if (strcmp(t1->str[j],t2->str[j]) == 0){
         j++;
-	test == true;
+	test = true;
       } else{
 	break;
       }
@@ -125,7 +127,7 @@ bool equalTuples(Tuple t1, Tuple t2){
 
 // insert 
 void insert(Tuple t, Relation r) {
-    int key = hash(t->str[0]);
+  int key = hash(t->str[0]);
     if(r->array[key] != NULL){
         LinkedListIterator it = LinkedList_iterator(r->array[key]);
         while(LinkedListIterator_hasNext(it)){
@@ -193,14 +195,14 @@ void delete(char** strs, Relation r) {
 }
 
 // selection
-Relation selection(char** strs, Relation r){
+//Relation selection(char** strs, Relation r){
 
-}
+//}
 
 // projection
-Relation projection(char** strs, Relation r){
+//Relation projection(char** strs, Relation r){
 
-}
+//}
 
 // join
 int main(){
