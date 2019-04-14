@@ -90,15 +90,22 @@ Tuple create_Tuple(char* strs) {
     }
     char *ptr = strtok(strs,","); //https://www.codingame.com/playgrounds/14213/how-to-play-with-strings-in-c/string-split
     int size = strlen(strs);
-    
-    printf("debugging\n");
+  //  printf("%d",size);
+  //  printf("debugging\n");
+    int count = 0;
+    // for (int m  = 0; m < strlen(strs); m++){
+    //     if (strs[m] == ","){
+    //         count++;
+    //     }
+    // }
     for (int i = 0; i < size; i++){ 
-        while(ptr != NULL){
+        if(ptr != NULL){
         tuple->str[i] = ptr;
+      //  printf("'%s'\n",ptr);
         ptr = strtok(NULL, ",");
 	}
     }
-	
+	// printf("%s", tuple->str[0]);
     return tuple;   
 }
 
@@ -112,15 +119,21 @@ int hash(char* str){
 // CHECK IF TWO TUPLES ARE EQUAL
 bool equalTuples(Tuple t1, Tuple t2){
   printf("equalTuples");
+//  printf("%s \n %s", t1->str[0], t2->str[0]);
   bool test = false;
-    for (int j = 0; j < 10; j++){
+    for (int j = 0; j < strlen(t1->str); j++){
+        printf("\nIN FOR LOOP %d %s", j, t1->str[j]);
+            
       if (strcmp(t1->str[j],t2->str[j]) == 0){
-        j++;
-	test = true;
-      } else{
-	break;
+        printf("\nIF TRUUUEUEUUEUEUEUEU");
+        	test = true;
+      } else {
+          test = false;
+          break;
       }
     }
+    printf("\nEND OF TEST");
+    printf("\n%d", test);
     return test; 
 }
 
@@ -208,7 +221,8 @@ void delete(char** strs, Relation r) {
 int main(){
   Relation csg = create_CSG();
   Tuple t1 = create_Tuple("CS101,12345,A");
-  Tuple t2 = create_Tuple("CS102,12345,A");
+  Tuple t2 = create_Tuple("CS101,12345,B");
+//  printf("%s \n %s", t1->str[1], t2->str[1]);
   // insert(t1,csg);
   // insert(t2,csg);
   equalTuples(t1, t2);
