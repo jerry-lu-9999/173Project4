@@ -46,7 +46,7 @@ Relation create_CSG(){
 }
 
 Relation create_SNAP(){
-    Relation snap = new_Relation(4);
+    Relation snap = new_Relation(3);
     LinkedList_add_at_front(snap->schema, "Phone");
     LinkedList_add_at_front(snap->schema, "Address");
     LinkedList_add_at_front(snap->schema, "Name");
@@ -55,14 +55,14 @@ Relation create_SNAP(){
 }
 
 Relation create_CP(){
-    Relation cp = new_Relation(4);
+    Relation cp = new_Relation(8);
     LinkedList_add_at_front(cp->schema, "Prerequisite");
     LinkedList_add_at_front(cp->schema, "Course");
     return cp;
 }
 
 Relation create_CDH(){
-    Relation cdh = new_Relation(4);
+    Relation cdh = new_Relation(8);
     LinkedList_add_at_front(cdh->schema, "Hour");
     LinkedList_add_at_front(cdh->schema, "Day");
     LinkedList_add_at_front(cdh->schema, "Course");
@@ -114,13 +114,15 @@ int hash(char* str){
 bool equalTuples(Tuple t1, Tuple t2){
     if(t1->tupSize != t2->tupSize) return false;
     bool test = false;
-    for (int j = 0; j < t1->tupSize; j++){
-      if (strcmp(t1->str[j],t2->str[j]) == 0){
-        	test = true;
-      } else {
-          test = false;
-          break;
-      }
+    for (int i = 0; i < t1->tupSize; i++){
+        for (int j = 0; j < t2->tupSize; j++){
+            if (strcmp(t1->str[i],t2->str[i]) == 0){
+                test = true;
+            } else {
+                test = false;
+                break;
+            }
+        }
     }
     return test; 
 }
@@ -152,18 +154,17 @@ char* Tuple_toString(Tuple tup, int i){
 // insert
 void insert(Tuple t, Relation r) {
     int key = hash(t->str[0]);
-    if(LinkedList_elementAt(r->array[key], 0) != NULL){
+    if(LinkedList_elementAt(r->array[key], 0) == NULL){
+        LinkedList_add_at_front(r->array[key], t);
+    } else {
         LinkedListIterator it = LinkedList_iterator(r->array[key]);
         while(LinkedListIterator_hasNext(it)){
             Tuple tup = LinkedListIterator_next(it);
-            if(equalTuples(tup, t)){
-	      //  printf("\nTuple already exists");
-            } else {
-            LinkedList_add_at_end(r->array[key], t);
-            }
+            if(!equalTuples(tup, t)){
+                LinkedList_add_at_end(r->array[key], t);
+            } 
+            return;
         }
-    } else {
-        LinkedList_add_at_front(r->array[key], t);
     }
 }
 
@@ -250,13 +251,20 @@ void delete(char** strs, Relation r) {
     print_Relation(r);
 }
 // PART 2
-void getStudentCourseGrade (char* name, char* course, Relation snap, Relation csg){
-    //printf("goes in here\n");
+void getStudentCourseGrade (Relation snap, Relation csg){
+    char name[50],  course[20];;
+    printf("Example 8.6\n");
+    printf("Answer to the query \"What grade did StudentName get in CourseName\"?\n");
+    printf("Enter student name\n");
+    fgets(name, 50, stdin);
+    strtok(name, "\n");
+    printf("Enter course\n");
+    fgets(course, 50, stdin); 
+    strtok(course, "\n");
     for(int i = 0; i < 1009; i++){
         LinkedList llist = snap->array[i];
         LinkedListIterator it = LinkedList_iterator(llist);
         while(LinkedListIterator_hasNext(it)){
-            //printf("goes in here 2\n");
             Tuple tup = LinkedListIterator_next(it);
             if(strcmp(tup->str[1], name) == 0){
                 char* id = tup->str[0];
@@ -264,7 +272,6 @@ void getStudentCourseGrade (char* name, char* course, Relation snap, Relation cs
                     LinkedList llist2 = csg->array[j];
                     LinkedListIterator it2 = LinkedList_iterator(llist2);
                     while(LinkedListIterator_hasNext(it2)){
-                        // printf("goes in here 3\n");
                         Tuple tup2 = LinkedListIterator_next(it2);
                         if((strcmp(tup2->str[1], id) == 0) && (strcmp(tup2->str[0], course) == 0)){
                             printf("The grade for student %s in course %s is %s\n", name, course, tup2->str[2]);
@@ -276,13 +283,23 @@ void getStudentCourseGrade (char* name, char* course, Relation snap, Relation cs
     }
 }
 
-void getStudentatTimeonDay(char* name, char* time, char* day, Relation snap, Relation csg, Relation cdh, Relation cr){
+void getStudentatTimeonDay(Relation snap, Relation csg, Relation cdh, Relation cr){
+    char name[50], time[10], day[5];
+    printf("Answer to the query \"Where is StudentName at Time on Day\"?\n");
+    printf("Enter student name\n");
+    fgets(name, 50, stdin);
+    strtok(name, "\n");
+    printf("Enter time\n");
+    fgets(time, 10, stdin);
+    strtok(time, "\n");
+    printf("Enter day\n");
+    fgets(day, 5, stdin);
+    strtok(day, "\n");
     LinkedList courses = new_LinkedList();
     for(int i = 0; i < 1009; i++){
         LinkedList llist = snap->array[i];
         LinkedListIterator it = LinkedList_iterator(llist);
         while(LinkedListIterator_hasNext(it)){
-            //printf("goes in here 2\n");
             Tuple tup = LinkedListIterator_next(it);
             if(strcmp(tup->str[1], name) == 0){
                 // get the id of the student from SNAP
@@ -313,6 +330,7 @@ void getStudentatTimeonDay(char* name, char* time, char* day, Relation snap, Rel
                 char* curCourse = LinkedListIterator_next(itCourse);
                 if((strcmp(tupCDH->str[0], curCourse) == 0)&&(strcmp(tupCDH->str[1], day) == 0)&&(strcmp(tupCDH->str[2], time)==0)){
                     keyCourse = hash(curCourse);
+                    break;
                 }
             }
         }
@@ -325,12 +343,12 @@ void getStudentatTimeonDay(char* name, char* time, char* day, Relation snap, Rel
     }
 }
 
-//selection
+// PART 3   
 Relation selection(char** strs, Relation r){
     LinkedList schema = r->schema;
     LinkedListIterator it = LinkedList_iterator(schema);
     int count = 0;
-    char* lookupQ[4];
+    char* lookupQ[10];
     while(LinkedListIterator_hasNext(it)){
         char* attribute = LinkedListIterator_next(it);
         if(strcmp(attribute, strs[0]) == 0){//if there is no value in the schema then break
@@ -344,18 +362,206 @@ Relation selection(char** strs, Relation r){
         } else {
             lookupQ[i] = (char*) "*";
         }
-        
+        printf("%s ", lookupQ[i]);
     }
     Relation selection = lookup(lookupQ, r);
     return selection;
 }
 
-// projection
-//Relation projection(char** strs, Relation r){
+int getIndex (LinkedList list, char* str){
+    int count = 0;
+    LinkedListIterator it = LinkedList_iterator(list);
+    while(LinkedListIterator_hasNext(it)){
+        char* e = LinkedListIterator_next(it);
+        if(strcmp(e, str) == 0){
+            break;
+        }
+        count++;
+    }
+    return count;
+}
+LinkedList intersectList(LinkedList l1, LinkedList l2){
+    LinkedListIterator it1 = LinkedList_iterator(l1);
+    
+    LinkedList intersection = new_LinkedList();
+    while(LinkedListIterator_hasNext(it1)){
+        char* att1 = (void*) LinkedListIterator_next(it1);
+        LinkedListIterator it2 = LinkedList_iterator(l2);
+        while(LinkedListIterator_hasNext(it2)){
+            char* att2 = (void*) LinkedListIterator_next(it2);
+            if(strcmp(att1, att2) == 0){
+                LinkedList_add_at_end(intersection, att1);
+            }
+        }
+    }
+    return intersection;
+}
 
-//}
+LinkedList unionList (LinkedList l1, LinkedList l2){
+    LinkedListIterator it1 = LinkedList_iterator(l1);
+    LinkedListIterator it2 = LinkedList_iterator(l2);
+    LinkedList unionList = new_LinkedList();
+    
+    while(LinkedListIterator_hasNext(it1)){
+        char* att1 = LinkedListIterator_next(it1);
+        LinkedList_add_at_end(unionList, att1);
+    }
+    while(LinkedListIterator_hasNext(it2)){
+        char* att2 = LinkedListIterator_next(it2);
+        if(!LinkedList_contains(unionList, att2)){
+            LinkedList_add_at_end(unionList, att2);
+        }
+    }
+    return unionList;
+}
+
+//this returns the indexes of the attributes that are the same
+//this can be stored as arrays of size 2, index 0 being the index i of schema 1
+//index 1 being the index j of schema 2
+LinkedList indexPairs (LinkedList schema1, LinkedList schema2){
+    LinkedList pair = new_LinkedList();
+    LinkedList newSchema = intersectList(schema1, schema2);
+    LinkedListIterator itnew = LinkedList_iterator(newSchema);
+    while(LinkedListIterator_hasNext(itnew)){
+        char* att = LinkedListIterator_next(itnew);
+        int index1 = getIndex(schema1, att);
+        int index2 = getIndex(schema2, att);
+        LinkedList_add_at_front(pair, index1);
+        LinkedList_add_at_end(pair, index2);
+    }
+    return pair;
+}
+
+Tuple mergeTuple(Tuple tup1, Tuple tup2, LinkedList indexPairs){
+    char* tupArr[100];
+    int curCount = 0;
+    for(int i = 0; i < tup1->tupSize; i++){
+        tupArr[curCount] = tup1->str[i];
+        curCount++;
+    }
+    int ind1 = (int) LinkedList_elementAt(indexPairs, 0);
+    int ind2 = (int) LinkedList_elementAt(indexPairs, 1);
+    char* att1 = tup1->str[ind1];
+    char* att2 = tup2->str[ind2];
+    if(strcmp(att1, att2) != 0){
+        return NULL;
+    }
+    
+    int at2 = 0;
+    for(int i = 0; i < tup2->tupSize; i++){
+            if(i != at2){
+                tupArr[curCount] = tup2->str[i];
+                curCount++;
+            }
+    }
+    int newSize = curCount;
+    Tuple newTup = create_Tuple(tupArr, newSize);
+    return newTup;
+}
+
+
+//projection
+Relation projection(char** strs, Relation r){
+    LinkedList schema = r-> schema;
+    LinkedList newSchema = new_LinkedList(); //maybe no need for this????????
+    LinkedListIterator it = LinkedList_iterator(schema);
+    int colID[4];
+    int count = 0;
+
+    //go through schema and count the number of 
+    while(LinkedListIterator_hasNext(it)){
+        char* attribute = LinkedListIterator_next(it);
+        for(int i = 0; i< r->size; i++){
+            // printf("\nwhat's wrong");
+            // printf("\nattribute: %s", attribute);
+            // printf("\nstrs: %s", strs[i]);
+            if(strs[i]==NULL){
+                // printf("\nwill break");
+                break;
+            }else if(strcmp(attribute, strs[i]) == 0){ //if the attribute and
+                // printf("colID insert"); 
+                colID[count] = i; //create and array of column ID 
+                count++;
+                LinkedList_add_at_end(newSchema, strs[i]);
+            }
+        }
+    }
+
+    //now there is a new schema
+    Relation projection = new_Relation(count);
+    projection->schema = newSchema;
+    int counter = 0;
+    char* temp [4];
+
+    for(int i = 0; i < 1009; i++){
+        LinkedListIterator it = LinkedList_iterator(r->array[i]); //go through all relation
+        while(LinkedListIterator_hasNext(it) && it != NULL){//for every tuple in the list
+            //if it contains column id, then put it into a new relation
+            Tuple tup = LinkedListIterator_next(it);
+            for(int k = 0; k < tup->tupSize; k++){//tuple 
+                for(int j = 0; j < 4; j++){ //go through column id    
+                // printf("stuck?"); 
+                    //int tupleSize = tup->tupSize;
+                    if(colID[j] == k){//at the place where the colID matches the tuple loc
+                        temp[counter] = tup->str[k];
+                        counter++;
+                        // printf("\nit entered: %s\n\n",temp[counter-1]);
+                    }
+                        // printf("this is counts: %d", count);
+                }
+            }
+        }
+    }
+                // int t = count;
+                // printf("count: %d", count);
+            char* input[10];
+            for(int c = 0; c < counter; c++){
+                input[0] = temp[c];
+                    // printf("counter::: %d", counter);
+                    // printf("\nTHISIS TEMP[%d]: %s\n\n",c,temp[c]);
+                    // printf("\nTHISIS INPUT[%d]: %s\n\n",t,input[t]);
+                Tuple t1 = create_Tuple(input, count);
+                insert(t1, projection);
+            }
+    printf("\n\n");
+    print_Relation(projection);
+    return projection;
+}
 
 // join
+Relation join(Relation r1, Relation r2){
+    LinkedList newSchema = unionList(r1->schema, r2->schema);
+    //LinkedList joinedAtt = intersectList(r1->schema, r2->schema);
+    //Calculate index pairs here
+    if(LinkedList_isEmpty(newSchema)){
+        printf("These two relations can't be joined. \n");
+        return NULL;
+    }
+    Relation joinedRela = new_Relation(19);
+
+    for(int i = 0; i < 1009; i++){//for all tuples in R1
+        LinkedList l1 = r1->array[i];
+        LinkedListIterator it1 = LinkedList_iterator(l1);
+        while(LinkedListIterator_hasNext(it1)){//All the tuples in the list at the position i from R1
+            Tuple tup1 = LinkedListIterator_next(it1);
+            for(int j = 0; j < 1009; j++){//For all tuples in R2
+                LinkedList l2 = r2->array[j];
+                LinkedListIterator it2 = LinkedList_iterator(l2);
+                while(LinkedListIterator_hasNext(it2)){//All the tuples in the list at the position i from R2
+                    Tuple tup2 = LinkedListIterator_next(it2);
+                    LinkedList pair = indexPairs(r1->schema, r2->schema);
+                    Tuple newTup = mergeTuple(tup1, tup2, pair);
+                    if(newTup == NULL){
+                        break;
+                    }
+                    insert(newTup, joinedRela);
+                }
+            }
+        }
+    }
+    print_Relation(joinedRela);
+    return joinedRela;
+}
 void readFile(char name[]){
   FILE *fptr;
   char *token;
@@ -371,103 +577,120 @@ void readFile(char name[]){
     printf("Reading success! Loading...\n");
   }
 
-  //Database db = new_Database();
-  
+  Database db = new_Database();
+  db->CSG = create_CSG();
+  db->SNAP = create_SNAP();
+  db->CDH = create_CDH();
+  db->CP = create_CP();
+  db->CR = create_CR();
+
   fgets(line,256,fptr);
-  if(strcmp("CSG\n",line) == 0){
-    for (int i = 0; i < 7; i++){
+ // if(strcmp("Course StudentID Grade\n",line) == 0){
+    for (int i = 0; i < 6; i++){
          fgets(line, 256, fptr);
-	 char* CSGtuple[3];
-             token = strtok(line, "|");
+	       char* CSGtuple[3];
+         token = strtok(line, "|");
 	     for (int m = 0; m < 3; m++){
-                 while(token != NULL ){		    
-		    CSGtuple[m] = token;
-		    printf("%s",CSGtuple[m]);
-              	    token = strtok(NULL, "|");
-		 }
+            while(token != NULL ){		    
+		            CSGtuple[m] = token;
+		            printf("%s ",CSGtuple[m]);
+              	token = strtok(NULL, "|");
+		        }
 	     }
-	     // Tuple t = create_Tuple(CSGtuple, 3);
-		    // insert(t,db->CSG);
+	      Tuple t = create_Tuple(CSGtuple, 3);
+		    insert(t,db->CSG);
+      
     }
+    fgets(line, 256, fptr);   //this fgets is to consume the empty line between two relations
+    fgets(line,256, fptr);   //read in the schema
     printf("\n");
-    fgets(line, 256, fptr);
-    fgets(line,256,fptr);
-    printf("%s",line);
+    //printf("%s",line);
+    //if (strcmp("StudentID Name Address Phone\n", line) == 0){}
     for (int j = 0; j < 3; j++){
         fgets(line,256,fptr);
+       // printf("%s\n", line);
         char* SNAPtuple[4];
         token = strtok(line, "|");
-           for (int n = 0; n < 3; n++){
+           for (int n = 0; n < 4; n++){
           	while (token != NULL){
-	          SNAPtuple[n] = token;
-	          printf("%s", SNAPtuple[n]);
-	          token = strtok(NULL, "|");
+	              SNAPtuple[n] = token;
+	              printf("%s ", SNAPtuple[n]);
+	              token = strtok(NULL, "|");
 	         }
-              }
-	   //Tuple t = create_Tuple(SNAPtuple, 4);
-	   //
+      }
+	        //Tuple ab = create_Tuple(SNAPtuple, 4);
+	        //insert(ab, db->SNAP);
+         //  printf("insert success\n");
     }
+
     fgets(line,256,fptr);
-    fgets(line,256,fptr);
-    printf("\n%s", line);
-      for (int a = 0; a < 8; a++){
-	fgets(line, 256, fptr);
-	char* CDHtuple[3];
-	token = strtok(line,"|");
-	for (int b = 0; b < 3; b++){
-	  while (token != NULL){
-	    CDHtuple[b] = token;
-	    printf("%s", CDHtuple[b]);
-	    token = strtok(NULL, "|");
+    fgets(line,256,fptr); //this line reads in Course Day Hour
+    printf("\n");
+      for (int a = 0; a < 3; a++){
+	         fgets(line, 256, fptr);
+	         char* CDHtuple[3];
+	         token = strtok(line,"|");
+           //printf("%s\n", line);
+	         for (int b = 0; b < 3; b++){
+	             while (token != NULL){
+	                CDHtuple[b] = token;
+	                printf("%s", CDHtuple[b]);
+	                token = strtok(NULL, "|");
 	  }
 	}
-	//	Tuple t = create_Tuple(CDHtuple, 3);
+		//Tuple t = create_Tuple(CDHtuple, 3);
+    //insert(t, db->CDH);
     }
+
       printf("\n");
       fgets(line,256,fptr);
-         fgets(line,256,fptr);
-	 printf("%s", line);
-    for (int c = 0; c < 3; c++){
-      fgets(line, 256, fptr);
-      char* CRtuple[3];
-      token = strtok(line, "|");
-      for (int d = 0; d < 2; d++){
-	while (token != NULL){
-          CRtuple[d] = token;
-	  printf("%s", CRtuple[d]);
-	  token = strtok(NULL, "|");
-	}
+      fgets(line,256,fptr);
+	    //printf("%s", line);
+    for (int c = 0; c < 4; c++){
+         fgets(line, 256, fptr);
+         char* CRtuple[3];
+         token = strtok(line, "|");
+         for (int d = 0; d < 2; d++){
+	         while (token != NULL){
+                CRtuple[d] = token;
+	              printf("%s", CRtuple[d]);
+	              token = strtok(NULL, "|");
+	          }
       }
-      //Tuple t = create_Tuple(CRtuple,2);
+      Tuple t = create_Tuple(CRtuple,2);
+      insert(t, db->CR);
+   
     }
     
     fgets(line,256,fptr);
     fgets(line,256, fptr);
-    printf("\n%s",line);
+    //printf("\n%s",line);
     for (int e = 0; e < 7; e++){
       fgets(line, 256, fptr);
       char* CPtuple[2];
       token = strtok(line, "|");
       for (int f = 0; f < 2; f++){
-        while (token!=NULL){
-          CPtuple[f] = token;
-	  printf("%s", CPtuple[f]);
-	  token = strtok(NULL, "|");
-	}
+          while (token != NULL){
+                 CPtuple[f] = token;
+	               printf("%s", CPtuple[f]);
+	               token = strtok(NULL, "|");
+	        }  
       }
-      //Tuple t = create_Tuple(CPtuple,2);
+      Tuple t = create_Tuple(CPtuple,2);
+      insert(t, db->CP);
+      //printf("insert success");
     }
   }
   
-}
+
   
 
 void writeFile(Database db){
   FILE *fptr;
-  fptr = fopen("Database","w+");
+  fptr = fopen("Database.txt","w+");
 
   // print_Relation(db->CSG);
-   fputs("CSG", fptr);
+   fputs("Course StudentID Grade", fptr);
    int CSGsizearr = sizeof(db->CSG->array)/sizeof(db->CSG->array[0]);
    for(int i = 0; i < CSGsizearr; i++){
    LinkedListIterator it = LinkedList_iterator(db->CSG->array[i]);
@@ -488,7 +711,7 @@ void writeFile(Database db){
 
      // print_Relation(db->SNAP);
    fputs("\n",fptr);
-   fputs("\nSNAP", fptr);
+   fputs("\nStudentID Name Address Phone", fptr);
    int SNAPsizearr = sizeof(db->SNAP->array)/sizeof(db->SNAP->array[0]);
    for(int i = 0; i < SNAPsizearr; i++){
    LinkedListIterator it = LinkedList_iterator(db->SNAP->array[i]);
@@ -508,7 +731,7 @@ void writeFile(Database db){
 
         // print_Relation(db->CDH);
    fputs("\n",fptr);
-   fputs("\nCDH", fptr);
+   fputs("\nCourse Day Hour", fptr);
    int CDHsizearr = sizeof(db->CDH->array)/sizeof(db->CDH->array[0]);
    for(int i = 0; i < CDHsizearr; i++){
    LinkedListIterator it = LinkedList_iterator(db->CDH->array[i]);
@@ -529,7 +752,7 @@ void writeFile(Database db){
 
         // print_Relation(db->CR);
    fputs("\n",fptr);
-   fputs("\nCR", fptr);
+   fputs("\nCourse Room", fptr);
    int CRsizearr = sizeof(db->CR->array)/sizeof(db->CR->array[0]);
    for(int i = 0; i < CRsizearr; i++){
    LinkedListIterator it = LinkedList_iterator(db->CR->array[i]);
@@ -548,7 +771,7 @@ void writeFile(Database db){
    }
 
    fputs("\n",fptr);
-   fputs("\nCP", fptr);
+   fputs("\nCourse Prerequisite", fptr);
    int CPsizearr = sizeof(db->CP->array)/sizeof(db->CP->array[0]);
    for (int i = 0; i < CPsizearr; i++){
      LinkedListIterator it = LinkedList_iterator(db->CP->array[i]);
@@ -569,7 +792,7 @@ void writeFile(Database db){
 int main(){
     Database db = new_Database();
     printf("Here is reading file");
-    readFile("Database");
+    readFile("Database.txt");
     char* csg1 [3] = {"CS101","12345","A"};
     char* csg2 [3] = {"CS101","67890","B"};
     char* csg3 [3] = {"EE200","12345","C"};
@@ -636,6 +859,7 @@ int main(){
     insert(s1,db->SNAP);
     insert(s2,db->SNAP);
     insert(s3,db->SNAP);
+
     insert(cd1,db->CDH);
     insert(cd2,db->CDH);
     insert(cd3,db->CDH);
@@ -661,62 +885,52 @@ int main(){
     printf("\n");
     printf("\n");
 
-    char str[20], course[20];
-    char *token;
     printf("PART 1\n");
+    printf("Demonstrate LOOK UP function.\n");
+    printf("1. (lookup(\"CS101\", 12345, *), Course-StudentId-Grade)\n");
+    char* lookup1 [3] = {"CS101", "12345", "*"};
+    lookup(lookup1, db->CSG);
+    printf("2. (lookup(\"CS205\", \"CS120\"), Course-Prerequisite)\n");
+    char* lookup2 [2] = {"CS205", "CS120"};
+    lookup(lookup2, db->CP);
 
-    char* query [3] = {"CS101", "", ""};
-    lookup(query, db->CSG);
-    delete(query, db->CSG);
+    /* COMMENT THIS PART OUT TO KEEP THE CR RELATION INTACT FOR TESTING IN PART 2
+    printf("Demonstrate DELETE function.\n");
+    printf("3. (delete(\"CS101\", *), Course-Room)\n");
+    char* delete3 [2] = {"CS101", "*"};
+    delete(delete3, db->CR);
+    */
+    printf("\nPART 2\n"); 
+    // getStudentCourseGrade(db->SNAP, db->CSG);
+    // getStudentatTimeonDay(db->SNAP, db->CSG, db->CDH, db->CR);
 
-    printf("PART 2\n");
+    printf("\nPART 3\n");
+    printf("\nExample 8.12.\n");
+    printf("Demonstrating selection functions for any query in the from of C=a (i.e Course=\"CS101\").\n");
+    char* selectionQuery [3] = {"Room", "=", "Turing Aud."};
+    selection(selectionQuery, db->CR);
+    printf("\nExample 8.15\n");
+    printf("Computing JOIN function for every 2 relations\n");
+    join(db->CR, db->CDH);
 
-    printf("PART 3\n");
-    
-    scanf("%s", str);
-    char* temp[3];
-    temp[0] = strtok(str,"");
-    for (int i = 1; i < 3; i++){
-        if (token != NULL){
-	  temp[i] = strtok(NULL,"");
-      }	  
-    }
-    
-    char* selectionQuery [3] = {temp[0], temp[1], temp[2]};
-    
-    selection(selectionQuery, db->CSG);
-    
-    printf("put in a specific course");
-    scanf("%s", course);
-
-    lookup(query, db->CSG);
-
-    printf("Give me a student name\n");
-    char name[20], class[20];
-    scanf("%s", name);
-    printf("then give me a class he is in:\n");
-    scanf("%s", class);
-    getStudentCourseGrade(name, class ,db->SNAP, db->CSG);
- 
-    char time[10], day[1];
-    printf("Give me a time of a day and a specific day\n");
-    scanf("%s", time);
-    scanf("%s", day);
-    getStudentatTimeonDay(name, time, day, db->SNAP, db->CSG, db->CDH, db->CR);
-
-    printf("\nProjection Demonstration CSG:")
+    printf("\nProjection Demonstration CSG:");
     char* csg1TEST [2] = {"Course"};
-    Relation prj1 = projection(csg1TEST, db->CSG);
-    printf("\nProjection Demonstration SNAP:")
+    projection(csg1TEST, db->CSG);
+    printf("\nProjection Demonstration SNAP:");
 
     char* snap1TEST [2] = {"Name"};
-    Relation prj2 = projection(csg1TEST, db->CSG);
-    printf("\nProjection Demonstration CDH:")
+    projection(snap1TEST, db->CSG);
+    printf("\nProjection Demonstration CDH:");
 
-    char* cdh1TEST [2] = {"Hour"}
-    Relation prj3 = projection(cdh1TEST, db->CDH);
-    printf("\nProjection Demonstration CR:")
+    char* cdh1TEST [2] = {"Hour"};
+    projection(cdh1TEST, db->CDH);
+    printf("\nProjection Demonstration CR:");
 
     char* cr1TEST [2] = {"Course"};
-    Relation prj4 = projection(cr1TEST, db->CR);
+    projection(cr1TEST, db->CR);
+
+    // printf("Example 8.15\n");
+    char* prjQuery [2] = {"Day", "Hour"};
+    char* selectQuery [3] = {"Room", "=", "Turing Aud."};
+    projection(prjQuery, selection(selectQuery,join(db->CR, db->CDH)));
 }
